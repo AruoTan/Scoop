@@ -1,7 +1,7 @@
 ## How to use this scoop bucket?
 
 ```pwsh
-scoop bucket add self https://github.com/WisThrG/ScoopStdExt
+scoop bucket add self git@github.com:AruoTan/Scoop.git
 scoop install self/<manifestname>
 ```
 
@@ -27,8 +27,8 @@ irm get.scoop.sh -outfile 'install.ps1'
 ```pwsh
 scoop install git
 scoop bucket add extras
-scoop bucket add self https://github.com/WisThrG/ScoopStdExt
+scoop bucket add self git@github.com:AruoTan/Scoop.git
 scoop uninstall git 7zip
-scoop install self/7zip self/git
+scoop install self/7zip
 scoop install dark innounp
 ```
