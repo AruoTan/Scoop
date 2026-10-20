@@ -10,8 +10,7 @@ scoop install self/<manifestname>
 ### 1st Method
 
 ```pwsh
-$env:SCOOP='D:/Scoop'
-iwr -useb get.scoop.sh | iex
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force; $s = irm https://get.scoop.sh; $old = '$SCOOP_CONFIG_FILE = "$SCOOP_CONFIG_HOME\scoop\config.json"'; if (-not $s.Contains($old)) { throw '安装脚本已变化，停止安装' }; $s = $s.Replace($old, '$SCOOP_CONFIG_FILE = "$SCOOP_DIR\config.json"'); & ([scriptblock]::Create($s)) -ScoopDir 'D:\Scoop'
 ```
 
 ### 2nd Method
@@ -24,11 +23,9 @@ irm get.scoop.sh -outfile 'install.ps1'
 
 ## Things that must be done before using Scoop normally
 
+Before starting, make sure the system has enabled the proxy on port 10808.
+
 ```pwsh
 scoop install git
-scoop bucket add extras
-scoop bucket add self git@github.com:AruoTan/Scoop.git
-scoop uninstall git 7zip
-scoop install self/7zip
-scoop install dark innounp
+irm https://raw.githubusercontent.com/AruoTan/Scoop/refs/heads/master/scripts/setup.ps1 | iex
 ```
