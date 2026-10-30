@@ -7,8 +7,6 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 
 $settings = [ordered]@{
-    'http.proxy'                         = '127.0.0.1:10808'
-    'https.proxy'                        = '127.0.0.1:10808'
     'core.sshcommand'                    = 'C:/Windows/System32/OpenSSH/ssh.exe'
 }
 
