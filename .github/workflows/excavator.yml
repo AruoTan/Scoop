@@ -4,12 +4,41 @@ on:
     # run every 4 hours
     - cron: '20 */4 * * *'
 name: Excavator
+permissions:
+  contents: write
 jobs:
   excavate:
     name: Excavate
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@main
+      - name: Cache hub with download retries
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          $env:SCOOP_CACHE = Join-Path $env:RUNNER_TEMP 'scoop-cache'
+          "SCOOP_CACHE=$env:SCOOP_CACHE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $request = @{
+            MaximumRetryCount = 4
+            RetryIntervalSec = 10
+          }
+          $manifestUrl = 'https://raw.githubusercontent.com/ScoopInstaller/Main/master/bucket/hub.json'
+          $manifest = Invoke-RestMethod -Uri $manifestUrl @request
+          $download = $manifest.architecture.'64bit'
+          # Match Scoop's cache key: app#version#URL-SHA256-prefix.extension.
+          $urlBytes = [System.Text.Encoding]::UTF8.GetBytes($download.url)
+          $urlHash = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($urlBytes)).ToLowerInvariant()
+          $cacheName = 'hub#{0}#{1}{2}' -f $manifest.version, $urlHash.Substring(0, 7), [System.IO.Path]::GetExtension($download.url)
+          New-Item -ItemType Directory -Path $env:SCOOP_CACHE -Force | Out-Null
+          $cachePath = Join-Path $env:SCOOP_CACHE $cacheName
+          $temporaryPath = "$cachePath.download"
+          Invoke-WebRequest -Uri $download.url -OutFile $temporaryPath @request
+          if ((Get-FileHash -LiteralPath $temporaryPath -Algorithm SHA256).Hash -ne $download.hash) {
+            Remove-Item -LiteralPath $temporaryPath -Force
+            throw 'hub download failed SHA256 verification.'
+          }
+          Move-Item -LiteralPath $temporaryPath -Destination $cachePath -Force
       - name: Excavate
         uses: ScoopInstaller/GithubActions@main
         env:
